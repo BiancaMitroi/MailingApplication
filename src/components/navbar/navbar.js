@@ -9,6 +9,8 @@ function Navbar() {
       <ul className="navbar-menu">
         <li><a href="/login">Login</a></li>
         <li><a href="/register">Register</a></li>
+        <li><a href="/check">Check</a></li>
+        <li><a href="/send">Send</a></li>
       </ul>
     </nav>
   );
