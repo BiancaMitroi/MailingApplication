@@ -6,7 +6,7 @@ function validateMailContent(email) {
         'risk free', 'prize', 'money', 'cash', 'offer', 'buy now', 'order now', 'credit', 'cheap', 'discount'
     ];
 
-    const message = email.toLowerCase();
+    const message = String(email).toLowerCase();
 
     const containsFear = fearWords.some(word => message.includes(word));
     const containsExtremeJoy = joyWords.some(word => message.includes(word));

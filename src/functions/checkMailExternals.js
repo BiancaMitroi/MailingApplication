@@ -32,7 +32,7 @@ async function checkMailExternals(urls, filePaths) {
         const response = await fetch('https://www.virustotal.com/api/v3/urls', {
             method: 'POST',
             headers: {
-                'x-apikey': VIRUSTOTAL_API_KEY,
+                'x-apikey': process.env.REACT_APP_VIRUSTOTAL_API_KEY,
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: `url=${encodeURIComponent(url)}`
@@ -53,7 +53,7 @@ async function checkMailExternals(urls, filePaths) {
         const response = await fetch(`https://www.virustotal.com/api/v3/files/${hash}`, {
             method: 'GET',
             headers: {
-                'x-apikey': VIRUSTOTAL_API_KEY
+                'x-apikey': process.env.REACT_APP_VIRUSTOTAL_API_KEY
             }
         });
         const data = await response.json();

@@ -1,10 +1,20 @@
+
 function checkMailAddress(email, callback) {
-    const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${EMAIL_CHECK_API_KEY}&email=${email}`;
+    const apiKey = process.env.REACT_APP_EMAIL_CHECK_API_KEY;
+    const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${email}`;
     const xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState === 4 && xmlHttp.status === 200){
-            callback(xmlHttp.responseText);
-
+        if (xmlHttp.readyState === 4){
+             if (xmlHttp.status === 200) {
+                callback(xmlHttp.responseText);
+            } else {
+                // Pass error status and message to callback
+                callback(JSON.stringify({
+                    error: true,
+                    status: xmlHttp.status,
+                    statusText: xmlHttp.statusText || 'Request failed'
+                }));
+            }
             // const response = JSON.parse(xmlHttp.responseText);
             // // Checks if the email is deliverable which means it is valid and can receive emails
             // const isValid = response.deliverability === 'DELIVERABLE' && 
