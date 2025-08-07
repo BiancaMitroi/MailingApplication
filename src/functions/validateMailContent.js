@@ -1,4 +1,6 @@
-function validateMailContent(email) {
+import checkMailExternals from '../functions/checkMailExternals';
+
+async function validateMailContent(email) {
     const fearWords = ['panic', 'terror', 'scared', 'frightened', 'horror', 'afraid', 'dread', 'alarm', 'fear'];
     const joyWords = ['ecstatic', 'elated', 'thrilled', 'overjoyed', 'delighted', 'joyful', 'bliss', 'euphoric', 'happy'];
     const spamIndicators = [
@@ -12,6 +14,21 @@ function validateMailContent(email) {
     const containsExtremeJoy = joyWords.some(word => message.includes(word));
     const containsSpam = spamIndicators.some(word => message.includes(word));
 
-    return containsFear || containsExtremeJoy || containsSpam;
+    const urlRegex = /https?:\/\/[^\s"'<>]+/gi;
+    const links = message.match(urlRegex) || [];
+
+    let linksResult = [];
+    if (links.length > 0) {
+        linksResult = await checkMailExternals(links, []);
+    }
+
+    const results = {
+        containsFear: containsFear,
+        containsExtremeJoy: containsExtremeJoy,
+        containsSpam: containsSpam,
+        linksResult: linksResult.filter(r => r.verdict > 0).map(r => r.attachment) // Filter out only malicious links
+    };
+
+    return results;
 }
 export default validateMailContent;

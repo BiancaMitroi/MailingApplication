@@ -2,17 +2,20 @@ import '../form.css';
 import { useState } from 'react';
 import validateMailContent from '../../functions/validateMailContent';
 import checkMailAddress from '../../functions/checkMailAddress';
+import checkMailExternals from '../../functions/checkMailExternals';
 
 function Send() {
     const [mailRecipients, setMailRecipients] = useState('');
     const [mailSubject, setMailSubject] = useState('');
     const [mailMessage, setMailMessage] = useState('');
+    const [fileAttachments, setFileAttachments] = useState([]);
 
     const [mailRecipientsResult, setMailRecipientsResult] = useState('');
     const [mailSubjectResult, setSubjectResult] = useState('');
     const [mailMessageResult, setMessageResult] = useState('');
 
     const [fileRecipients, setFileRecipients] = useState('');
+    const [fileAttachmentsResult, setFileAttachmentsResult] = useState([]);
 
     // Handle manual input of multiple addresses (comma or newline separated)
     const handleRecipientsChange = (e) => {
@@ -49,15 +52,7 @@ function Send() {
             if (response.error) {
                 results.push({ mailAddress, isValid: 'check failed' });
             } else {
-                const isValid =
-                    response.deliverability === 'DELIVERABLE' &&
-                    response.quality_score > 0.8 &&
-                    response.is_valid_format.value === true &&
-                    response.is_free_email.value === true &&
-                    response.is_disposable_email.value === false &&
-                    response.is_catchall_email.value === false &&
-                    response.is_role_email.value === false &&
-                    response.is_smtp_valid.value === true;
+                const isValid = response.status === 'valid'
                 results.push({ mailAddress, isValid });
             }
         }
@@ -72,42 +67,72 @@ function Send() {
         const allRecipients = [mailRecipients, fileRecipients].filter(Boolean).join(',');
         const emails = allRecipients.split(/[\s,]+/).filter(Boolean);
 
-        if (emails.length === 0) {
-            setMailRecipientsResult('No recipients provided.');
-            return;
+       if(emails.length > 0 ) {
+        const results = await checkAllAddressesSequentially(emails);
+
+        const invalidAddresses = results.filter(r => !r.isValid).map(r => r.mailAddress);
+        const uncheckedAddresses = results.filter(r => r.isValid === 'check failed').map(r => r.mailAddress);
+
+        if (invalidAddresses.length > 0) {
+            setMailRecipientsResult("Invalid mail address(es): " + invalidAddresses.join(', '));
+        } 
+
+        if (uncheckedAddresses.length > 0) {
+            setMailRecipientsResult("Some mail addresses could not be checked: " + uncheckedAddresses.join(', '));
         }
 
-       const results = await checkAllAddressesSequentially(emails);
+        if (invalidAddresses.length == 0 && uncheckedAddresses.length == 0 && emails.length > 0) {
+            setMailRecipientsResult('The mail recipients are valid.');
+        }
 
-    const invalidAddresses = results.filter(r => !r.isValid).map(r => r.mailAddress);
-    const uncheckedAddresses = results.filter(r => r.isValid === 'check failed').map(r => r.mailAddress);
+        if (emails.length === 0) {
+            setMailRecipientsResult('No recipients provided.');
+        }
+       }
 
-    if (invalidAddresses.length > 0) {
-        setMailRecipientsResult("Invalid mail address(es): " + invalidAddresses.join(', '));
-    } 
+    const mailContentResult = await validateMailContent(mailMessage);
+    const mailSubjectResult = await validateMailContent(mailSubject);
+    if (mailSubject)
+      if (mailSubjectResult.containsExtremeJoy || mailSubjectResult.containsFear || mailSubjectResult.containsSpam || mailSubjectResult.linksResult.length > 0){
+        const statusSpamMessage = mailSubjectResult.containsExtremeJoy || mailSubjectResult.containsFear || mailSubjectResult.containsSpam ? `Mail subject contains: inappropriate content. (spam, fear, extreme joy)` : '';
+        const statusLinksMessage = mailSubjectResult.linksResult.length > 0 ? `Mail subject contains malicious links: ${mailSubjectResult.linksResult}` : '';
+        setSubjectResult(`${statusSpamMessage || ''} ${statusLinksMessage || ''}`.trim());
+      } else
+        setSubjectResult("Mail subject is valid.");
+    else
+      setSubjectResult('');
+    if (mailMessage)
+      if (mailContentResult.containsExtremeJoy || mailContentResult.containsFear || mailContentResult.containsSpam || mailContentResult.linksResult.length > 0)
+        setMessageResult(`Mail message contains: inappropriate content. (spam, fear, extreme joy): ${mailContentResult.containsExtremeJoy || mailContentResult.containsFear || mailContentResult.containsSpam}\n and/or malicious links: ${mailContentResult.linksResult}`);
+      else
+        setMessageResult("Mail message is valid.");
+    else
+      setMessageResult('');
 
-    if (uncheckedAddresses.length > 0) {
-        setMailRecipientsResult("Some mail addresses could not be checked: " + uncheckedAddresses.join(', '));
-    }
-
-    if (invalidAddresses.length == 0 && uncheckedAddresses.length == 0) {
-        setMailRecipientsResult('The mail recipients are valid.');
-    }
-
-        if (mailSubject)
-            if (validateMailContent(mailSubject))
-                setSubjectResult("Mail subject contains fear, extreme joy, or spam indicators.");
-            else
-                setSubjectResult("Mail subject is valid.");
-        else
-            setSubjectResult('');
-        if (mailMessage)
-            if (validateMailContent(mailMessage))
-                setMessageResult("Mail message contains fear, extreme joy, or spam indicators.");
-            else
-                setMessageResult("Mail message is valid.");
-        else
-            setMessageResult('');
+        if (fileAttachments.length > 0) {
+            const files = Array.from(fileAttachments);
+            try {
+                const results = await checkMailExternals([], files);
+                // Find malicious files (example: verdict or analysis logic)
+                const maliciousFiles = results
+                    .filter(r => {
+                    console.log('Result:', r.verdict);
+                    return r.verdict && r.verdict > 0; // Adjust this condition based on actual response structure
+                    })
+                    .map((r) => r.attachment);
+                console.log('Malicious files:', maliciousFiles);
+                if (maliciousFiles.length > 0) {
+                    setFileAttachmentsResult(`Malicious attachments found: ${maliciousFiles.join(', ')}`);
+                } else {
+                    setFileAttachmentsResult('All files are good.');
+                }
+            } catch (error) {
+                setFileAttachmentsResult('Error checking attachments.');
+                console.error('Error checking attachments:', error);
+            }
+        } else {
+            setFileAttachmentsResult('');
+        }
     };
 
     return (
@@ -137,7 +162,8 @@ function Send() {
                     onChange={e => setMailMessage(e.target.value)}
                 ></textarea>
                 Attachments:
-                <input type="file" accept=".txt, .csv" />
+                {fileAttachmentsResult && <div className="error">{fileAttachmentsResult}</div>}
+                <input type="file" multiple onChange={(e) => setFileAttachments(e.target.files)} />
                 <button type="submit">Send</button>
             </form>
         </div>

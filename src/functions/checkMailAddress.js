@@ -1,7 +1,7 @@
 
 function checkMailAddress(email, callback) {
     const apiKey = process.env.REACT_APP_EMAIL_CHECK_API_KEY;
-    const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${email}`;
+    const url = `https://api-eu.zerobounce.net/v2/validate?api_key=${apiKey}&email=${email}`;
     const xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() {
         if (xmlHttp.readyState === 4){
