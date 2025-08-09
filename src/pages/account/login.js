@@ -18,7 +18,7 @@ function Login() {
 
     // Example login request (replace /api/login with your endpoint)
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('http://127.0.0.1:8000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -27,12 +27,17 @@ function Login() {
         setError('Invalid email or password.');
         return;
       }
-      // Handle successful login (e.g., redirect or set auth state)
-      // window.location.href = '/dashboard';
-    } catch {
-      setError('Server error. Please try again later.');
+      const data = await response.json();
+    if (data.access_token) {
+      localStorage.setItem('authToken', data.access_token);
+      setError('Now you are logged in.');
+    } else {
+      setError('No token received.');
     }
-  };
+  } catch (error) {
+    setError(`Server error. Please try again later: ${error.message}`);
+  }
+};
 
   return (
     <div className="login">

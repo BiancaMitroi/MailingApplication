@@ -1,5 +1,5 @@
 import '../form.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import checkMailAddress from '../../functions/checkMailAddress';
 import setUIForCheckOrSendContent from '../../functions/setUIForCheckOrSendContent';
 
@@ -68,17 +68,20 @@ function Send() {
         const emails = allRecipients.split(/[\s,]+/).filter(Boolean);
 
        if(emails.length > 0 ) {
-
-        const response = await fetch('/api/check-users', {
+        try{
+            const response = await fetch('http://127.0.0.1:8000/api/check-users', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+                'Authorization': `${localStorage.getItem('authToken')}`
+             },
             body: JSON.stringify({ emails })
         });
         const data = await response.json();
-        if (data.existing && data.existing.length > 0) {
-            results.push("These addresses already have an account: " + data.existing.join(', '));
+        if (!response.ok) {
+            setMailRecipientsResult('Error checking addresses: ' + data.error);
             return;
         }
+        console.log("checkResponse", data);
         if(data.nonexistent && data.nonexistent.length > 0) {
             const results = await checkAllAddressesSequentially(data.nonexistent);
 
@@ -108,13 +111,21 @@ function Send() {
         if (results.length > 0) {
             setMailRecipientsResult(results.join('\n'));
         }
-    }
+        } catch (error) {
+            setMailRecipientsResult('Error checking addresses: ' + error.message);
+            console.error("Error checking addresses:", error);
+        }
+        
+    
 
     setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachments, setSubjectResult, setMessageResult, setFileAttachmentsResult);
+    
     try {
-        const response = await fetch('/api/send', {
+        const response = await fetch('http://127.0.0.1:8000/api/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+                'Authorization': `${localStorage.getItem('authToken')}`
+             },
             body: JSON.stringify({
                 recipients: emails,
                 subject: mailSubject,
@@ -129,11 +140,20 @@ function Send() {
         if (result.error) {
             throw new Error(result.error);
         }
-        // Handle successful send
+        setFileAttachmentsResult('Email sent successfully.');
     } catch (error) {
         console.error('Error sending email:', error);
     }
+}
 };
+
+    useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            // Redirect to login page if not logged in
+            window.location.href = '/login';
+        }
+    }, []);
 
     return (
         <div className="send">

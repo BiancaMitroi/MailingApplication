@@ -21,24 +21,28 @@ function Register() {
     if (email) {
 
        try {
-        const checkResponse = await fetch(`/api/check-user?email=${encodeURIComponent(email)}`);
+        const checkResponse = await fetch(`http://127.0.0.1:8000/api/check-user?email=${encodeURIComponent(email)}`);
+        const checkData = await checkResponse.json();
+        console.log("checkResponse", checkData);
         if (checkResponse.ok) {
-          const checkData = await checkResponse.json();
           if (checkData.exists) {
             setError('An account with this email already exists.');
             return;
           } else {
-             checkMailAddress(email, (responseText) => {
+            const isValidEmail = await new Promise((resolve) => {
+            checkMailAddress(email, (responseText) => {
                 const response = JSON.parse(responseText);
-                const isValid = response.status === 'valid';
-                if (!isValid) {
-                setError("Invalid mail address.");
-                }
+                resolve(response.status === 'valid');
             });
+            });
+            if (!isValidEmail) {
+            setError("Invalid mail address.");
+            return;
+            }
           }
         }
-      } catch {
-        setError('Could not check if user exists. Please try again.');
+      } catch (error) {
+        setError(`Could not check if user exists. Please try again: ${error.message}`);
         return;
       }
 
@@ -52,9 +56,19 @@ function Register() {
       return;
     }
 
+    if(validatePassword(password) !== true) {
+      setError(validatePassword(password).join(' '));
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
     // Example register request (replace /api/register with your endpoint)
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch('http://127.0.0.1:8000/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName, lastName, email, password })
