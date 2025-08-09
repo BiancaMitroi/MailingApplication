@@ -1,3 +1,9 @@
+
+/**
+ * Validate the password strength.
+ * @param {string} password - The password to validate.
+ * @returns {boolean|string[]} - True if the password is valid, or an array of error messages.
+ */
 function validatePassword(password) {
     const errorMessages = [];
   // Check if the password is at least 8 characters long

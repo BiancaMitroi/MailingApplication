@@ -17,9 +17,6 @@ function Check() {
   const handleCheck = async (event) => {
     event.preventDefault();
 
-    
-    // const uncheckedFiles = fileAttachments.filter(f => r.verdict === 'check failed').map(f => f.attachment);
-
     if (mailAddress) {
 
       try {

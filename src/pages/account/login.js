@@ -10,13 +10,11 @@ function Login() {
     e.preventDefault();
     setError('');
 
-    // Basic validation
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
     }
 
-    // Example login request (replace /api/login with your endpoint)
     try {
       const response = await fetch('http://127.0.0.1:8000/api/login', {
         method: 'POST',

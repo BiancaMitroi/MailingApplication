@@ -1,4 +1,10 @@
 
+/**
+ * Check if an email address is valid.
+ * @param {string} email - The email address to check.
+ * @param {function} callback - The callback function to call with the result.
+ * @returns {void} - No return value, the function calls an external API and passes the result to the callback.
+ */
 function checkMailAddress(email, callback) {
     const apiKey = process.env.REACT_APP_EMAIL_CHECK_API_KEY;
     const url = `https://api-eu.zerobounce.net/v2/validate?api_key=${apiKey}&email=${email}`;
@@ -8,7 +14,6 @@ function checkMailAddress(email, callback) {
              if (xmlHttp.status === 200) {
                 callback(xmlHttp.responseText);
             } else {
-                // Pass error status and message to callback
                 callback(JSON.stringify({
                     error: true,
                     status: xmlHttp.status,

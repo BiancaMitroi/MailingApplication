@@ -1,6 +1,13 @@
 import validateMailContent from './validateMailContent';
 import checkMailExternals from './checkMailExternals';
 
+/**
+ * Generate a user interface message based on the email section content and validation results.
+ * @param {string} mailSectionContent - The content of the email section.
+ * @param {object} mailSectionResult - The result of the email validation.
+ * @param {string} mailSection - The name of the email section (e.g., "subject", "message").
+ * @returns {string} - The UI message to display.
+ */
 function uiMessage(mailSectionContent, mailSectionResult, mailSection){
     if (mailSectionContent)
       if (mailSectionResult.containsExtremeJoy || mailSectionResult.containsFear || mailSectionResult.containsSpam || mailSectionResult.linksResult.length > 0){
@@ -13,6 +20,15 @@ function uiMessage(mailSectionContent, mailSectionResult, mailSection){
       return '';
 }
 
+/**
+ * Generate UI messages for email content validation.
+ * @param {string} mailSubject - The subject of the email.
+ * @param {string} mailMessage - The message body of the email.
+ * @param {FileList} fileAttachments - The file attachments for the email.
+ * @param {function} setSubjectResult - The function to call with the subject validation result.
+ * @param {function} setMessageResult - The function to call with the message validation result.
+ * @param {function} setFileAttachmentsResult - The function to call with the file attachments validation result.
+ */
 async function setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachments, setSubjectResult, setMessageResult, setFileAttachmentsResult) {
     const mailSubjectResult = await validateMailContent(mailSubject);
     const mailContentResult = await validateMailContent(mailMessage);

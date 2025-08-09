@@ -1,4 +1,8 @@
+import useState from 'react';
+
 function Logout() {
+    const [error, setError] = useState('');
+
     fetch('http://127.0.0.1:8000/api/logout', {
         method: 'GET',
         headers: {
@@ -8,17 +12,17 @@ function Logout() {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Logout failed');
+            setError('Logout failed');
         }
         localStorage.removeItem('authToken');
     })
     .catch(error => {
-        console.error('Error during logout:', error);
+        setError(`Logout failed: ${error.message}`);
     });
     return (
         <div className="logout">
             <h1>Logging out...</h1>
-            <p>You've been logged out successfully.</p>
+            {error ? <p className="error">{error}</p> : <p>You've been logged out successfully.</p>}
         </div>
     );
 }

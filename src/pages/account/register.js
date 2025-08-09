@@ -11,12 +11,10 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
 
     if (email) {
 
@@ -50,7 +48,6 @@ function Register() {
       setError('');
     }
 
-    // Basic validation
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
@@ -66,7 +63,6 @@ function Register() {
       return;
     }
 
-    // Example register request (replace /api/register with your endpoint)
     try {
       const response = await fetch('http://127.0.0.1:8000/api/register', {
         method: 'POST',
@@ -77,8 +73,7 @@ function Register() {
         setError('Registration failed.');
         return;
       }
-      setSuccess('Registration successful! You can now log in.');
-      // Optionally redirect or clear form
+      setError('Registration successful! You can now log in.');
     } catch {
       setError('Server error. Please try again later.');
     }
@@ -136,7 +131,6 @@ function Register() {
         />
         <button type="submit">Register</button>
         {error && <div className="error">{error}</div>}
-        {success && <div className="success">{success}</div>}
       </form>
     </div>
   );

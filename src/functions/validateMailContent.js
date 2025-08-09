@@ -1,5 +1,10 @@
 import checkMailExternals from '../functions/checkMailExternals';
 
+/**
+ * Validate the content of an email.
+ * @param {string} email - The email content to validate.
+ * @returns {Promise<object>} - A promise that resolves to an object containing the validation results. It may contain information about fear, joy, spam, and links.
+ */
 async function validateMailContent(email) {
     const fearWords = ['panic', 'terror', 'scared', 'frightened', 'horror', 'afraid', 'dread', 'alarm', 'fear'];
     const joyWords = ['ecstatic', 'elated', 'thrilled', 'overjoyed', 'delighted', 'joyful', 'bliss', 'euphoric', 'happy'];

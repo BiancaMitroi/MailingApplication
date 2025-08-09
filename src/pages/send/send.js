@@ -16,7 +16,6 @@ function Send() {
     const [fileRecipients, setFileRecipients] = useState('');
     const [fileAttachmentsResult, setFileAttachmentsResult] = useState([]);
 
-    // Handle manual input of multiple addresses (comma or newline separated)
     const handleRecipientsChange = (e) => {
         setMailRecipients(e.target.value);
     };
@@ -26,7 +25,6 @@ function Send() {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(event) {
-            // Split by comma, newline, or whitespace
             const text = event.target.result;
             const emails = text.split(/[\s,]+/).filter(Boolean);
             setFileRecipients(emails.join(','));
@@ -45,7 +43,6 @@ function Send() {
     async function checkAllAddressesSequentially(emails, delayMs = 1200) {
         const results = [];
         for (const mailAddress of emails) {
-            // Wait before each request to avoid rate limit
             await new Promise(resolve => setTimeout(resolve, delayMs));
             const response = await checkMailAddressPromise(mailAddress);
             if (response.error) {
@@ -58,11 +55,10 @@ function Send() {
         return results;
     }
 
-    // Example submit handler
     const handleSubmit = async (e) => {
         e.preventDefault();
         const results = [];
-        setMailRecipientsResult(''); // Clear previous results
+        setMailRecipientsResult('');
 
         const allRecipients = [mailRecipients, fileRecipients].filter(Boolean).join(',');
         const emails = allRecipients.split(/[\s,]+/).filter(Boolean);
@@ -150,7 +146,6 @@ function Send() {
     useEffect(() => {
         const token = localStorage.getItem('authToken');
         if (!token) {
-            // Redirect to login page if not logged in
             window.location.href = '/login';
         }
     }, []);
