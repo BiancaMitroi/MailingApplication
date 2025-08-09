@@ -21,15 +21,30 @@ function Check() {
     // const uncheckedFiles = fileAttachments.filter(f => r.verdict === 'check failed').map(f => f.attachment);
 
     if (mailAddress) {
-      checkMailAddress(mailAddress, (responseText) => {
-        const response = JSON.parse(responseText);
-        const isValid = response.status === 'valid';
-        if (!isValid) {
-          setMailAddressResult("Invalid mail address.");
-        } else {
-          setMailAddressResult('The mail address is valid.');
+
+      try {
+        const checkResponse = await fetch(`/api/check-user?email=${encodeURIComponent(mailAddress)}`);
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          if (checkData.exists) {
+            setMailAddressResult('An account with this email already exists.');
+            return;
+          } else {
+             checkMailAddress(mailAddress, (responseText) => {
+                const response = JSON.parse(responseText);
+                const isValid = response.status === 'valid';
+                if (!isValid) {
+                setMailAddressResult("Invalid mail address.");
+                } else {
+                setMailAddressResult('The mail address is valid.');
+                }
+            });
+          }
         }
-      });
+      } catch {
+        setMailAddressResult('Could not check if user exists. Please try again.');
+        return;
+      }
     } else {
       setMailAddressResult('');
     }

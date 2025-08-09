@@ -61,36 +61,79 @@ function Send() {
     // Example submit handler
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const results = [];
         setMailRecipientsResult(''); // Clear previous results
 
         const allRecipients = [mailRecipients, fileRecipients].filter(Boolean).join(',');
         const emails = allRecipients.split(/[\s,]+/).filter(Boolean);
 
        if(emails.length > 0 ) {
-        const results = await checkAllAddressesSequentially(emails);
 
-        const invalidAddresses = results.filter(r => !r.isValid).map(r => r.mailAddress);
-        const uncheckedAddresses = results.filter(r => r.isValid === 'check failed').map(r => r.mailAddress);
-
-        if (invalidAddresses.length > 0) {
-            setMailRecipientsResult("Invalid mail address(es): " + invalidAddresses.join(', '));
-        } 
-
-        if (uncheckedAddresses.length > 0) {
-            setMailRecipientsResult("Some mail addresses could not be checked: " + uncheckedAddresses.join(', '));
+        const response = await fetch('/api/check-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emails })
+        });
+        const data = await response.json();
+        if (data.existing && data.existing.length > 0) {
+            results.push("These addresses already have an account: " + data.existing.join(', '));
+            return;
         }
+        if(data.nonexistent && data.nonexistent.length > 0) {
+            const results = await checkAllAddressesSequentially(data.nonexistent);
 
-        if (invalidAddresses.length == 0 && uncheckedAddresses.length == 0 && emails.length > 0) {
-            setMailRecipientsResult('The mail recipients are valid.');
+            const invalidAddresses = results.filter(r => !r.isValid).map(r => r.mailAddress);
+            const uncheckedAddresses = results.filter(r => r.isValid === 'check failed').map(r => r.mailAddress);
+
+            if (invalidAddresses.length > 0) {
+                results.push("Invalid mail address(es): " + invalidAddresses.join(', '));
+            }
+
+            if (uncheckedAddresses.length > 0) {
+                results.push("Some mail addresses could not be checked: " + uncheckedAddresses.join(', '));
+            }
+
+            if (invalidAddresses.length === 0 && uncheckedAddresses.length === 0 && emails.length > 0) {
+                setMailRecipientsResult('The mail recipients are valid.');
+            }
+        }
+        if (data.error) {
+            results.push("Error checking addresses: " + data.error);
+            return;
         }
 
         if (emails.length === 0) {
             setMailRecipientsResult('No recipients provided.');
         }
-       }
+        if (results.length > 0) {
+            setMailRecipientsResult(results.join('\n'));
+        }
+    }
 
     setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachments, setSubjectResult, setMessageResult, setFileAttachmentsResult);
-    };
+    try {
+        const response = await fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                recipients: emails,
+                subject: mailSubject,
+                message: mailMessage,
+                attachments: fileAttachments
+            })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to send email');
+        }
+        const result = await response.json();
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        // Handle successful send
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
 
     return (
         <div className="send">
