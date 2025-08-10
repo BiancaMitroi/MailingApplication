@@ -1,0 +1,1 @@
+![diagrama de principiu](./diagrama_de_principiu.drawio.png)
