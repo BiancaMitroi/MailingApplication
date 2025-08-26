@@ -1,6 +1,6 @@
 import '../form.css';
 import validatePassword from '../../functions/validatePassword';
-import checkMailAddress from '../../functions/checkMailAddress';
+import {checkMailAddress} from '../../functions/checkMailAddress';
 import '../form.css'
 import { useState } from 'react'
 
@@ -27,15 +27,12 @@ function Register() {
             setError('An account with this email already exists.');
             return;
           } else {
-            const isValidEmail = await new Promise((resolve) => {
-            checkMailAddress(email, (responseText) => {
-                const response = JSON.parse(responseText);
-                resolve(response.status === 'valid');
-            });
-            });
-            if (!isValidEmail) {
-            setError("Invalid mail address.");
-            return;
+            const response = await checkMailAddress(email);
+            console.log("checkMailAddress response:", response);
+            const isValid = response.Status === 'Valid';
+            if (!isValid) {
+              setError("Invalid mail address.");
+              return;
             }
           }
         }

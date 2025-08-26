@@ -1,6 +1,6 @@
 import '../form.css';
-import { useState, useEffect } from 'react';
-import checkMailAddress from '../../functions/checkMailAddress';
+import { useState } from 'react';
+import {checkMailAddresses} from '../../functions/checkMailAddress';
 import setUIForCheckOrSendContent from '../../functions/setUIForCheckOrSendContent';
 
 function Send() {
@@ -32,29 +32,6 @@ function Send() {
         reader.readAsText(file);
     };
 
-    function checkMailAddressPromise(email) {
-        return new Promise(resolve => {
-            checkMailAddress(email, (responseText) => {
-                resolve(JSON.parse(responseText));
-            });
-        });
-    }
-
-    async function checkAllAddressesSequentially(emails, delayMs = 1200) {
-        const results = [];
-        for (const mailAddress of emails) {
-            await new Promise(resolve => setTimeout(resolve, delayMs));
-            const response = await checkMailAddressPromise(mailAddress);
-            if (response.error) {
-                results.push({ mailAddress, isValid: 'check failed' });
-            } else {
-                const isValid = response.status === 'valid'
-                results.push({ mailAddress, isValid });
-            }
-        }
-        return results;
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const results = [];
@@ -73,82 +50,81 @@ function Send() {
             body: JSON.stringify({ emails })
         });
         const data = await response.json();
-        if (!response.ok) {
-            setMailRecipientsResult('Error checking addresses: ' + data.error);
-            return;
-        }
-        console.log("checkResponse", data);
-        if(data.nonexistent && data.nonexistent.length > 0) {
-            const results = await checkAllAddressesSequentially(data.nonexistent);
+        if(response.ok) {
+            if(data.nonexistent && data.nonexistent.length > 0) {
+                const results = await checkMailAddresses(data.nonexistent);
 
-            const invalidAddresses = results.filter(r => !r.isValid).map(r => r.mailAddress);
-            const uncheckedAddresses = results.filter(r => r.isValid === 'check failed').map(r => r.mailAddress);
+                const invalidAddresses = results.filter(r => r.status !== "Valid").map(r => r.mailAddress);
+                const uncheckedAddresses = results.filter(r => r.status === "false").map(r => r.mailAddress);
 
-            if (invalidAddresses.length > 0) {
-                results.push("Invalid mail address(es): " + invalidAddresses.join(', '));
+                if (invalidAddresses.length > 0) {
+                    results.push("Invalid mail address(es): " + invalidAddresses.join(', '));
+                }
+
+                if (uncheckedAddresses.length > 0) {
+                    results.push("Some mail addresses could not be checked: " + uncheckedAddresses.join(', '));
+                }
+
+                if (invalidAddresses.length === 0 && emails.length > 0) {
+                    setMailRecipientsResult('The mail recipients are valid.');
+                }
             }
 
-            if (uncheckedAddresses.length > 0) {
-                results.push("Some mail addresses could not be checked: " + uncheckedAddresses.join(', '));
+            
+            if (results.length > 0) {
+                setMailRecipientsResult(results.join('\n'));
             }
-
-            if (invalidAddresses.length === 0 && uncheckedAddresses.length === 0 && emails.length > 0) {
-                setMailRecipientsResult('The mail recipients are valid.');
+        } else {
+            if(data.error.includes('Invalid access token')) {
+                window.location.href = '/login';
+            } else {
+                setMailRecipientsResult('Error checking addresses: ' + data.error);
             }
         }
-        if (data.error) {
-            results.push("Error checking addresses: " + data.error);
-            return;
-        }
-
-        if (emails.length === 0) {
-            setMailRecipientsResult('No recipients provided.');
-        }
-        if (results.length > 0) {
-            setMailRecipientsResult(results.join('\n'));
-        }
-        } catch (error) {
-            setMailRecipientsResult('Error checking addresses: ' + error.message);
-            console.error("Error checking addresses:", error);
-        }
-        
-    
+    } catch (error) {
+        console.error("Error:", error);
+    }
 
     setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachments, setSubjectResult, setMessageResult, setFileAttachmentsResult);
-    
+    console.log("After setUIForCheckOrSendContent", fileAttachments);
     try {
+        const formData = new FormData();
+        formData.append('recipients', emails);
+        formData.append('subject', mailSubject);
+        formData.append('message', mailMessage);
+
+        // Attach files
+        for (let i = 0; i < fileAttachments.length; i++) {
+            formData.append('attachments', fileAttachments[i]);
+        }
+
         const response = await fetch('http://127.0.0.1:8000/api/send', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json',
+            headers: {
                 'Authorization': `${localStorage.getItem('authToken')}`
-             },
-            body: JSON.stringify({
-                recipients: emails,
-                subject: mailSubject,
-                message: mailMessage,
-                attachments: fileAttachments
-            })
+                // Do NOT set 'Content-Type'; browser will set it automatically for FormData
+            },
+            body: formData
         });
-        if (!response.ok) {
-            throw new Error('Failed to send email');
+
+        const data = await response.json();
+        if (response.ok) {
+            setMailRecipientsResult('Email sent successfully.');
+        } else {
+            if (data.error && data.error.includes('Invalid access token')) {
+                setMailRecipientsResult('You are logged out. Please log in again.');
+            } else {
+                setMailRecipientsResult('Error sending email: ' + (data.error || 'Unknown error'));
+            }
         }
-        const result = await response.json();
-        if (result.error) {
-            throw new Error(result.error);
-        }
-        setFileAttachmentsResult('Email sent successfully.');
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error("Error sending email:", error);
+        setMailRecipientsResult('Error sending email: ' + error.message);
     }
+} else {
+    setMailRecipientsResult('No recipients provided.');  
 }
 };
-
-    useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            window.location.href = '/login';
-        }
-    }, []);
 
     return (
         <div className="send">

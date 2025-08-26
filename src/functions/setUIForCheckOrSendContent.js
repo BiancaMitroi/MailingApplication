@@ -37,6 +37,7 @@ async function setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachme
     setMessageResult(uiMessage(mailMessage, mailContentResult, 'message'));
 
     if (fileAttachments.length > 0) {
+        console.log("file attachments", fileAttachments);
         const files = Array.from(fileAttachments);
         try {
             const results = await checkMailExternals([], files);

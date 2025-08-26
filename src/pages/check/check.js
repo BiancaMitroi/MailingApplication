@@ -1,5 +1,5 @@
 import '../form.css';
-import checkMailAddress from '../../functions/checkMailAddress';
+import {checkMailAddress} from '../../functions/checkMailAddress';
 import setUIForCheckOrSendContent from '../../functions/setUIForCheckOrSendContent';
 import { useState } from 'react';
 
@@ -20,30 +20,29 @@ function Check() {
     if (mailAddress) {
 
       try {
-        const checkResponse = await fetch(`/api/check-user?email=${encodeURIComponent(mailAddress)}`);
+        const checkResponse = await fetch(`http://127.0.0.1:8000/api/check-user?email=${encodeURIComponent(mailAddress)}`);
         if (checkResponse.ok) {
           const checkData = await checkResponse.json();
           if (checkData.exists) {
-            setMailAddressResult('An account with this email already exists.');
+            setMailAddressResult('The mail address is valid.');
             return;
           } else {
-             checkMailAddress(mailAddress, (responseText) => {
-                const response = JSON.parse(responseText);
-                const isValid = response.status === 'valid';
-                if (!isValid) {
-                setMailAddressResult("Invalid mail address.");
-                } else {
-                setMailAddressResult('The mail address is valid.');
-                }
-            });
-          }
-        }
+             const response = await checkMailAddress(mailAddress);
+             console.log("checkMailAddress response:", response);
+             const isValid = response.Status === 'Valid';
+             if (!isValid) {
+               setMailAddressResult("Invalid mail address.");
+             } else {
+               setMailAddressResult('The mail address is valid.');
+             }
+           }
+         }
       } catch {
         setMailAddressResult('Could not check if user exists. Please try again.');
         return;
       }
     } else {
-      setMailAddressResult('');
+      setMailAddressResult('No email address provided.');
     }
 
     setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachments, setSubjectResult, setMessageResult, setFileAttachmentsResult);
