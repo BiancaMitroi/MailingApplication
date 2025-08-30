@@ -10,10 +10,7 @@ function Logout() {
             'Authorization': `${localStorage.getItem('authToken')}`
         }
     })
-    .then(response => {
-        if (!response.ok) {
-            setError('Logout failed');
-        }
+    .then(() => {
         localStorage.removeItem('authToken');
     })
     .catch(error => {
