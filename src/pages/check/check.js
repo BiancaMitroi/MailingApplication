@@ -16,7 +16,7 @@ function Check() {
 
   const handleCheck = async (event) => {
     event.preventDefault();
-
+    
     if (mailAddress) {
 
       try {
@@ -25,11 +25,10 @@ function Check() {
           const checkData = await checkResponse.json();
           if (checkData.exists) {
             setMailAddressResult('The mail address is valid.');
-            return;
           } else {
-             const response = await checkMailAddress(mailAddress);
+             const response = checkMailAddress(mailAddress);
              console.log("checkMailAddress response:", response);
-             const isValid = response.Status === 'Valid';
+             const isValid = response.status === 'Valid';
              if (!isValid) {
                setMailAddressResult("Invalid mail address.");
              } else {
@@ -39,14 +38,12 @@ function Check() {
          }
       } catch {
         setMailAddressResult('Could not check if user exists. Please try again.');
-        return;
       }
     } else {
       setMailAddressResult('No email address provided.');
     }
 
     setUIForCheckOrSendContent(mailSubject, mailMessage, fileAttachments, setSubjectResult, setMessageResult, setFileAttachmentsResult);
-    
   }
 
   return (

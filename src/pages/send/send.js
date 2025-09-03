@@ -98,16 +98,20 @@ function Send() {
             formData.append('attachments', fileAttachments[i]);
         }
 
+        console.log("FormData prepared:", formData);
+
         const response = await fetch('http://127.0.0.1:8000/api/send', {
             method: 'POST',
             headers: {
-                'Authorization': `${localStorage.getItem('authToken')}`
+                'Authorization': `${localStorage.getItem('authToken')}`,
+                'Accept': 'application/json'
                 // Do NOT set 'Content-Type'; browser will set it automatically for FormData
             },
             body: formData
         });
 
         const data = await response.json();
+        console.log("Send response data:", data);
         if (response.ok) {
             setMailRecipientsResult('Email sent successfully.');
         } else {
@@ -138,7 +142,7 @@ function Send() {
                     rows={3}
                 />
                 <div>or load recipients list from file</div>
-                <input type="file" accept=".txt, .csv" onChange={handleFileChange} />
+                <input className='recipient-input' type="file" accept=".txt, .csv" onChange={handleFileChange} />
                 {mailSubjectResult && <div className="error">{mailSubjectResult}</div>}
                 <input
                     type="text"
@@ -154,7 +158,7 @@ function Send() {
                 ></textarea>
                 Attachments:
                 {fileAttachmentsResult && <div className="error">{fileAttachmentsResult}</div>}
-                <input type="file" multiple onChange={(e) => setFileAttachments(e.target.files)} />
+                <input className='file-input' type="file" multiple onChange={(e) => setFileAttachments(e.target.files)} />
                 <button type="submit">Send</button>
             </form>
         </div>

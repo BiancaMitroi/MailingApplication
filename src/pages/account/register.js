@@ -29,7 +29,7 @@ function Register() {
           } else {
             const response = await checkMailAddress(email);
             console.log("checkMailAddress response:", response);
-            const isValid = response.Status === 'Valid';
+            const isValid = response.status === 'Valid';
             if (!isValid) {
               setError("Invalid mail address.");
               return;

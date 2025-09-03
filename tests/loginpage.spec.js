@@ -18,14 +18,13 @@ test('login page throws error in case the email or password are invalid', async 
     await page.fill('input[type="email"]', 'test@example.com');
     await page.fill('input[type="password"]', 'password');
     await page.click('button[type="submit"]');
-    await expect(page.locator('.error')).toHaveText(/Invalid email or password/i);
+    await expect(page.locator('.error')).toHaveText(/Invalid email or password./i);
 });
 
 test('login page logs the user when the credentials are valid', async ({ page }) => {
     await page.goto('http://localhost:3000/login');
     const email = process.env.REACT_APP_EMAIL_TEST_LOGIN;
     const password = process.env.REACT_APP_PASSWORD_TEST_LOGIN;
-    console.log(email);
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', password);
     await page.click('button[type="submit"]');

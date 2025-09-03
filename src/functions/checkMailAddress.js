@@ -10,11 +10,7 @@ async function checkMailAddress(email) {
     if (!checkEmailRegex.test(email)) {
         return { status: "Invalid", mailAddress: email };
     }
-    const apiKey = process.env.REACT_APP_EMAIL_CHECK_API_KEY;
-    const url = `https://client.myemailverifier.com/verifier/validate_single/${email}/${apiKey}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data;
+    return { status: "Valid", mailAddress: email };
 }
 
 async function checkMailAddresses(emails) {
