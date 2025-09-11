@@ -2,10 +2,9 @@ import './App.css';
 import Navbar from './components/navbar/navbar';
 import Home from './pages/home/home';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Login, Register } from './pages/account';
+import { Login, Register, Logout, Edit, Delete } from './pages/account';
 import Send from './pages/send/send';
 import Check from './pages/check/check';
-import Logout from './pages/account/logout';
 
 function App() {
   return (
@@ -18,6 +17,8 @@ function App() {
             <Route path="/login" element={<Login/>} />
             <Route path="/logout" element={<Logout/>} />
             <Route path="/register" element={<Register/>} />
+            <Route path="/edit" element={<Edit/>} />
+            <Route path="/delete" element={<Delete/>} />
             <Route path="/check" element={<Check/>} />
             <Route path="/send" element={<Send/>} />
           </Routes>

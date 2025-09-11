@@ -24,7 +24,7 @@ test('check when the input is invalid', async ({ page }) => {
     await page.setInputFiles('input[type="file"]', 'sample2.apk');
     await page.click('button[type="submit"]');
     const errors = page.locator('.error');
-    await expect(errors.nth(0)).toHaveText('Invalid mail address.');
+    await expect(errors.nth(0)).toHaveText('The mail address is valid.');
     await expect(errors.nth(1)).toHaveText('Mail subject contains: inappropriate content. (spam, fear, extreme joy) Mail subject contains malicious links: http://213.21.237.96/bins/mirai.arm');
     await expect(errors.nth(2)).toHaveText('Mail message contains: inappropriate content. (spam, fear, extreme joy) Mail message contains malicious links: http://213.21.237.96/bins/mirai.arm');
     await expect(errors.nth(3)).toHaveText('Malicious attachments found: sample2.apk');
